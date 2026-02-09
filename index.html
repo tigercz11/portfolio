@@ -39,7 +39,6 @@ header {
 </header>
 
 <div id="viewer"></div>
-
 <script type="module">
 import * as THREE from './three.module.js';
 import { OrbitControls } from './OrbitControls.js';
@@ -47,17 +46,16 @@ import { GLTFLoader } from './GLTFLoader.js';
 
 const container = document.getElementById('viewer');
 
-// FORCE HEIGHT (CRITICAL FOR MOBILE)
+// Force height for mobile
 container.style.height = '500px';
 
 // Delay init until layout is ready
-setTimeout(init, 100);
+window.addEventListener('load', init);
 
 function init() {
-
-  // WebGL support check
+  // Check WebGL
   if (!window.WebGLRenderingContext) {
-    container.innerHTML = '<p style="color:white;padding:20px">WebGL not supported</p>';
+    container.innerHTML = '<p style="color:white;padding:20px">WebGL not supported on this device.</p>';
     return;
   }
 
@@ -74,25 +72,22 @@ function init() {
   );
   camera.position.set(0, 1, 4);
 
-  // Renderer (FORCE GPU)
+  // Renderer
   const renderer = new THREE.WebGLRenderer({
     antialias: true,
     powerPreference: 'high-performance'
   });
-
   renderer.setSize(container.clientWidth, container.clientHeight);
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-  renderer.outputColorSpace = THREE.SRGBColorSpace;
   container.appendChild(renderer.domElement);
 
-  // Lights (extra bright for mobile)
+  // Lights
   scene.add(new THREE.HemisphereLight(0xffffff, 0x444444, 2.5));
-
   const dirLight = new THREE.DirectionalLight(0xffffff, 3);
   dirLight.position.set(5, 10, 7);
   scene.add(dirLight);
 
-  // DEBUG cube (must appear)
+  // Debug cube
   const cube = new THREE.Mesh(
     new THREE.BoxGeometry(),
     new THREE.MeshStandardMaterial({ color: 0xff0000 })
@@ -108,15 +103,13 @@ function init() {
   controls.rotateSpeed = 0.8;
   controls.zoomSpeed = 0.8;
 
-  // Model
+  // Load model
   const loader = new GLTFLoader();
   loader.load(
     'https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/DamagedHelmet/glTF-Binary/DamagedHelmet.glb',
-    (gltf) => {
-      scene.add(gltf.scene);
-    },
+    (gltf) => { scene.add(gltf.scene); },
     undefined,
-    (e) => console.error(e)
+    (err) => console.error(err)
   );
 
   // Animate
@@ -128,7 +121,7 @@ function init() {
   }
   animate();
 
-  // Resize (mobile-safe)
+  // Resize
   window.addEventListener('resize', () => {
     const w = container.clientWidth;
     const h = container.clientHeight || 500;
