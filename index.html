@@ -2,141 +2,123 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Your Name – 3D Portfolio</title>
+    <title>3D Portfolio Fix</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
-        html, body {
-            margin: 0;
-            height: 100%;
-            background: #0e0e0e;
-            color: #fff;
-            font-family: system-ui, sans-serif;
-        }
-        header {
-            padding: 20px;
-            text-align: center;
-        }
-        #viewer {
+        body { margin: 0; background: #0e0e0e; color: white; font-family: sans-serif; }
+        header { text-align: center; padding: 20px; }
+        #viewer-container {
+            position: relative;
             width: 90%;
+            max-width: 1000px;
             height: 500px;
-            background: #111;
-            border-radius: 16px;
+            margin: 0 auto;
+            background: #000;
+            border-radius: 12px;
             overflow: hidden;
-            margin: 20px auto;
-            max-width: 1100px;
-            border: 1px solid #333;
+            border: 2px solid #333;
+        }
+        #status {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #888;
+            pointer-events: none;
         }
     </style>
 </head>
 <body>
 
 <header>
-    <h1>Your Name</h1>
-    <p>Interactive Three.js Portfolio</p>
+    <h1>3D Portfolio</h1>
+    <p>Status: <span id="log">Initializing...</span></p>
 </header>
 
-<div id="viewer"></div>
+<div id="viewer-container">
+    <div id="status">Loading 3D Scene...</div>
+    <div id="viewer" style="width:100%; height:100%;"></div>
+</div>
 
 <script type="module">
     import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
     import { OrbitControls } from 'https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/controls/OrbitControls.js';
     import { GLTFLoader } from 'https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/loaders/GLTFLoader.js';
-    import { RGBELoader } from 'https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/loaders/RGBELoader.js';
 
-    const container = document.getElementById('viewer');
+    const statusText = document.getElementById('status');
+    const logText = document.getElementById('log');
 
-    function initThree() {
-        // Scene
+    function log(msg) { logText.innerText = msg; }
+
+    try {
+        const container = document.getElementById('viewer');
         const scene = new THREE.Scene();
         scene.background = new THREE.Color(0x111111);
 
-        // Camera - Moved further back (z=10) to avoid being inside the model
         const camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 1000);
-        camera.position.set(0, 2, 10);
+        camera.position.set(0, 0, 5);
 
-        // Renderer
         const renderer = new THREE.WebGLRenderer({ antialias: true });
         renderer.setSize(container.clientWidth, container.clientHeight);
         renderer.setPixelRatio(window.devicePixelRatio);
-        
-        // Essential for modern Three.js and HDR
-        renderer.toneMapping = THREE.ACESFilmicToneMapping;
-        renderer.toneMappingExposure = 1.2;
-        renderer.outputColorSpace = THREE.SRGBColorSpace;
-        
         container.appendChild(renderer.domElement);
 
-        // Lighting
-        const ambientLight = new THREE.AmbientLight(0xffffff, 1);
+        // Simple Lights (No HDR needed)
+        const ambientLight = new THREE.AmbientLight(0xffffff, 2);
         scene.add(ambientLight);
         
-        const spotLight = new THREE.SpotLight(0xffffff, 50);
-        spotLight.position.set(5, 10, 5);
-        scene.add(spotLight);
+        const directionalLight = new THREE.DirectionalLight(0xffffff, 3);
+        directionalLight.position.set(5, 5, 5);
+        scene.add(directionalLight);
 
-        // Load Environment Map (HDR)
-        new RGBELoader()
-            .setPath('https://rawcdn.githack.com/mrdoob/three.js/dev/examples/textures/equirectangular/')
-            .load('royal_esplanade_1k.hdr', function (texture) {
-                texture.mapping = THREE.EquirectangularReflectionMapping;
-                scene.environment = texture;
-                // Optional: set scene background to the HDR
-                // scene.background = texture; 
-            });
-
-        // Load Model
-        const loader = new GLTFLoader();
-        // Using githack to bypass CORS issues
-        const modelUrl = 'https://rawcdn.githack.com/KhronosGroup/glTF-Sample-Models/master/2.0/DamagedHelmet/glTF-Binary/DamagedHelmet.glb';
-        
-        loader.load(modelUrl, (gltf) => {
-            const model = gltf.scene;
-            model.scale.set(2.5, 2.5, 2.5); // Slightly smaller to fit view
-            scene.add(model);
-            
-            // Remove the fallback cube once model loads
-            scene.remove(cube); 
-        }, 
-        (xhr) => {
-            console.log((xhr.loaded / xhr.total * 100) + '% loaded');
-        },
-        (error) => {
-            console.error('An error happened', error);
-        });
-
-        // Fallback Cube
-        const cube = new THREE.Mesh(
-            new THREE.BoxGeometry(1, 1, 1),
-            new THREE.MeshStandardMaterial({ color: 0xff0000 })
-        );
+        // Add a spinning Cube immediately so we know it works
+        const geometry = new THREE.BoxGeometry(1, 1, 1);
+        const material = new THREE.MeshStandardMaterial({ color: 0x00ff00 });
+        const cube = new THREE.Mesh(geometry, material);
         scene.add(cube);
+        log("Three.js Running - Loading Model...");
 
         // Controls
         const controls = new OrbitControls(camera, renderer.domElement);
         controls.enableDamping = true;
-        controls.autoRotate = true;
 
-        // Animation Loop
+        // Load Model
+        const loader = new GLTFLoader();
+        // Use a more reliable CDN link for the model
+        const modelUrl = 'https://rawcdn.githack.com/KhronosGroup/glTF-Sample-Models/master/2.0/DamagedHelmet/glTF-Binary/DamagedHelmet.glb';
+        
+        loader.load(modelUrl, (gltf) => {
+            scene.remove(cube); // Remove cube once model loads
+            const model = gltf.scene;
+            model.scale.set(1.5, 1.5, 1.5);
+            scene.add(model);
+            statusText.style.display = 'none';
+            log("Model Loaded Successfully");
+        }, 
+        undefined, 
+        (error) => {
+            console.error(error);
+            log("Error loading model. Check console.");
+            statusText.innerText = "Failed to load 3D Model";
+        });
+
         function animate() {
             requestAnimationFrame(animate);
-            cube.rotation.y += 0.01;
+            if(cube) cube.rotation.y += 0.01;
             controls.update();
             renderer.render(scene, camera);
         }
         animate();
 
-        // Resize Handling
         window.addEventListener('resize', () => {
-            const width = container.clientWidth;
-            const height = container.clientHeight;
-            camera.aspect = width / height;
+            camera.aspect = container.clientWidth / container.clientHeight;
             camera.updateProjectionMatrix();
-            renderer.setSize(width, height);
+            renderer.setSize(container.clientWidth, container.clientHeight);
         });
-    }
 
-    // Initialize
-    initThree();
+    } catch (e) {
+        log("Critical Error: " + e.message);
+    }
 </script>
 
 </body>
