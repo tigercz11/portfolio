@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Portfolio – 3D Viewer</title>
+<title>Your Name – 3D Portfolio</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
@@ -35,10 +35,11 @@ header {
 
 <header>
   <h1>Your Name</h1>
-  <p>Three.js Portfolio (Webzdarma-safe)</p>
+  <p>Interactive Three.js Portfolio</p>
 </header>
 
 <div id="viewer"></div>
+
 <script type="module">
 import * as THREE from './three.module.js';
 import { OrbitControls } from './OrbitControls.js';
@@ -46,56 +47,49 @@ import { GLTFLoader } from './GLTFLoader.js';
 
 const container = document.getElementById('viewer');
 
-// Force height for mobile
-container.style.height = '500px';
+function initThree() {
+  // Force height for mobile
+  container.style.height = '500px';
 
-// Delay init until layout is ready
-window.addEventListener('load', init);
-
-function init() {
-  // Check WebGL
   if (!window.WebGLRenderingContext) {
     container.innerHTML = '<p style="color:white;padding:20px">WebGL not supported on this device.</p>';
     return;
   }
+
+  const width = container.clientWidth;
+  const height = container.clientHeight || 500;
 
   // Scene
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(0x111111);
 
   // Camera
-  const camera = new THREE.PerspectiveCamera(
-    60,
-    container.clientWidth / container.clientHeight,
-    0.1,
-    100
-  );
-  camera.position.set(0, 1, 4);
+  const camera = new THREE.PerspectiveCamera(60, width / height, 0.1, 100);
+  camera.position.set(0, 0.5, 3); // pulled back for model visibility
+  camera.lookAt(0,0,0);
 
   // Renderer
-  const renderer = new THREE.WebGLRenderer({
-    antialias: true,
-    powerPreference: 'high-performance'
-  });
-  renderer.setSize(container.clientWidth, container.clientHeight);
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference:'high-performance' });
+  renderer.setSize(width, height);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
   container.appendChild(renderer.domElement);
 
   // Lights
-  scene.add(new THREE.HemisphereLight(0xffffff, 0x444444, 2.5));
-  const dirLight = new THREE.DirectionalLight(0xffffff, 3);
-  dirLight.position.set(5, 10, 7);
-  scene.add(dirLight);
+  const hemi = new THREE.HemisphereLight(0xffffff, 0x444444, 3);
+  scene.add(hemi);
+  const dir = new THREE.DirectionalLight(0xffffff, 5);
+  dir.position.set(5,5,5);
+  scene.add(dir);
 
-  // Debug cube
+  // Red debug cube
   const cube = new THREE.Mesh(
-    new THREE.BoxGeometry(),
-    new THREE.MeshStandardMaterial({ color: 0xff0000 })
+    new THREE.BoxGeometry(0.5,0.5,0.5),
+    new THREE.MeshStandardMaterial({ color:0xff0000 })
   );
-  cube.position.y = 0.5;
+  cube.position.set(0,0.25,0);
   scene.add(cube);
 
-  // Controls (touch friendly)
+  // Controls
   const controls = new OrbitControls(camera, renderer.domElement);
   controls.enableDamping = true;
   controls.autoRotate = true;
@@ -103,11 +97,16 @@ function init() {
   controls.rotateSpeed = 0.8;
   controls.zoomSpeed = 0.8;
 
-  // Load model
+  // Load 3D model
   const loader = new GLTFLoader();
   loader.load(
     'https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/DamagedHelmet/glTF-Binary/DamagedHelmet.glb',
-    (gltf) => { scene.add(gltf.scene); },
+    (gltf) => {
+      const model = gltf.scene;
+      model.scale.set(2,2,2);      // scale up to be visible
+      model.position.set(0,0,0);
+      scene.add(model);
+    },
     undefined,
     (err) => console.error(err)
   );
@@ -117,19 +116,23 @@ function init() {
     requestAnimationFrame(animate);
     cube.rotation.y += 0.01;
     controls.update();
-    renderer.render(scene, camera);
+    renderer.render(scene,camera);
   }
   animate();
 
   // Resize
-  window.addEventListener('resize', () => {
+  window.addEventListener('resize', ()=>{
     const w = container.clientWidth;
     const h = container.clientHeight || 500;
     camera.aspect = w / h;
     camera.updateProjectionMatrix();
-    renderer.setSize(w, h);
+    renderer.setSize(w,h);
   });
 }
+
+// Delay slightly after page load to ensure layout is ready
+window.addEventListener('load', ()=>setTimeout(initThree,100));
 </script>
+
 </body>
 </html>
