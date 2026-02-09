@@ -41,14 +41,13 @@ header {
 <div id="viewer"></div>
 
 <script type="module">
-import * as THREE from './three.module.js';
-import { OrbitControls } from './OrbitControls.js';
-import { GLTFLoader } from './GLTFLoader.js';
+import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
+import { OrbitControls } from 'https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/controls/OrbitControls.js';
+import { GLTFLoader } from 'https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/loaders/GLTFLoader.js';
 
 const container = document.getElementById('viewer');
 
 function initThree() {
-  // Force height for mobile
   container.style.height = '500px';
 
   if (!window.WebGLRenderingContext) {
@@ -65,7 +64,7 @@ function initThree() {
 
   // Camera
   const camera = new THREE.PerspectiveCamera(60, width / height, 0.1, 100);
-  camera.position.set(0, 0.5, 3); // pulled back for model visibility
+  camera.position.set(0, 0.5, 3);
   camera.lookAt(0,0,0);
 
   // Renderer
@@ -103,7 +102,7 @@ function initThree() {
     'https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/DamagedHelmet/glTF-Binary/DamagedHelmet.glb',
     (gltf) => {
       const model = gltf.scene;
-      model.scale.set(2,2,2);      // scale up to be visible
+      model.scale.set(2,2,2);
       model.position.set(0,0,0);
       scene.add(model);
     },
@@ -130,7 +129,7 @@ function initThree() {
   });
 }
 
-// Delay slightly after page load to ensure layout is ready
+// Delay slightly after page load
 window.addEventListener('load', ()=>setTimeout(initThree,100));
 </script>
 
